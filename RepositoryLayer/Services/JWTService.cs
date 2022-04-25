@@ -89,7 +89,7 @@ namespace RepositoryLayer.Services
             }
 
             // Check if we have user claim.
-            if (!claims.ContainsKey("username"))
+            if (!claims.ContainsKey("Id"))
             {
                 validationResponse.IsValid = false;
 

@@ -15,41 +15,38 @@ namespace NotesServices.Functions
 {
     public class CreateNoteFunc
     {
-        private INoteRL noteRL;
+        private readonly INoteRL noteRL;
+        private readonly IJWTService _jWTService;
 
-        public CreateNoteFunc(INoteRL noteRL)
+        public CreateNoteFunc(INoteRL noteRL, IJWTService jWTService)
         {
             this.noteRL = noteRL;
+            this._jWTService = jWTService;
         }
 
         [FunctionName("CreateNote")]
-        public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
-            ILogger log)
+        public async Task<IActionResult> CreateNote(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "note/CreateNote")] HttpRequest req)
         {
-            log.LogInformation("C# HTTP trigger UserRegistration function processed a request.");
-
-            try
+            //ValidateJWT auth = new ValidateJWT(req);
+            var authResponse = _jWTService.ValidateJWT(req);
+            if (!authResponse.IsValid)
             {
-
-
-                string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-                dynamic data = JsonConvert.DeserializeObject<NoteModel>(requestBody);
-
-                var result = await this.noteRL.CreateNote(data);
-                return new OkObjectResult(result);
-
-            }
-            catch (CosmosException cosmosException)
-            {
-
-
-                log.LogError("Creating item failed with error {0}", cosmosException.ToString());
-                return new BadRequestObjectResult($"Failed to create item. Cosmos Status Code {cosmosException.StatusCode}, Sub Status Code {cosmosException.SubStatusCode}: {cosmosException.Message}.");
-
-
+                return new UnauthorizedResult();
             }
 
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            //string requestBody = String.Empty;
+            //using (StreamReader streamReader = new StreamReader(req.Body))
+            //{
+            //    requestBody = await streamReader.ReadToEndAsync();
+            //}
+            dynamic data = JsonConvert.DeserializeObject<NoteModel>(requestBody);
+
+            var response = await this.noteRL.CreateNote(authResponse.Email, data );
+            return new OkObjectResult(response);
         }
+
     }
+    
 }

@@ -5,12 +5,15 @@ using System.Text;
 
 namespace CommonLayer.Models.RequestModels
 {
-    public class UserLogin
+    public class ResetPasswordModel
     {
-        [JsonProperty("Email")]
+        [JsonProperty("email")]
         public string Email { get; set; }
 
-        [JsonProperty("Password")]
+        [JsonProperty("password")]
         public string Password { get; set; }
+
+        [JsonProperty("confirmPassword")]
+        public string ConfirmPassword { get; set; }
     }
 }

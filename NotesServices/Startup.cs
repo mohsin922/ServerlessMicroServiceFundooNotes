@@ -35,7 +35,8 @@ namespace NotesServices
             });
 
             builder.Services.AddTransient<INoteRL, NoteRL>();
-            
+            builder.Services.AddSingleton<IJWTService, JWTService>();
+
         }            
     }
 }

@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using RepositoryLayer.Interfaces;
 using CommonLayer.Models.RequestModels;
 using Microsoft.Azure.Cosmos;
+using RepositoryLayer.Services;
 
 namespace UserServices.Functions
 {
@@ -17,9 +18,12 @@ namespace UserServices.Functions
     {
         private IUserRL userRL;
 
-        public ForgetPasswordFunc(IUserRL userRL)
+        private readonly IJWTService _jWTService;
+
+        public ForgetPasswordFunc(IUserRL userRL, IJWTService jWTService)
         {
             this.userRL = userRL;
+            this._jWTService = jWTService;
         }
         [FunctionName("ForgetPassword")]
         public async Task<IActionResult> Run(
@@ -34,6 +38,39 @@ namespace UserServices.Functions
                 dynamic data = JsonConvert.DeserializeObject<ForgetPasswordModel>(requestBody);
 
                 var result = this.userRL.ForgetPassword(data);
+                if (result != null)
+                {
+                    return new OkObjectResult(result);
+                }
+                return new BadRequestResult();
+            }
+            catch (CosmosException cosmosException)
+            {
+
+                log.LogError(" forget password failed with error {0}", cosmosException.ToString());
+                return new BadRequestObjectResult($"Failed to proced for forget password Cosmos Status Code {cosmosException.StatusCode}, Sub Status Code {cosmosException.SubStatusCode}: {cosmosException.Message}.");
+            }
+        }
+
+        [FunctionName("ResetPassword")]
+        public async Task<IActionResult> ResetPassword(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "user/ResetPassword")] HttpRequest req,
+            ILogger log)
+        {
+            log.LogInformation("C# HTTP trigger function processed a request.");
+
+            try
+            {
+                var authResponse = _jWTService.ValidateJWT(req);
+                if (!authResponse.IsValid)
+                {
+                    return new UnauthorizedResult();
+                }
+
+                string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+                dynamic data = JsonConvert.DeserializeObject<ResetPasswordModel>(requestBody);
+
+                var result = this.userRL.ResetPassword(data);
                 if (result != null)
                 {
                     return new OkObjectResult(result);

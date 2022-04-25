@@ -12,6 +12,10 @@ namespace RepositoryLayer.Interfaces
 
         Task<UserRegModel> CreateUser(UserRegModel userReg);
         LoginResponse Login(UserLogin userLogin);
+        Task<List<UserRegModel>> GetUsers();
+
         string ForgetPassword(ForgetPasswordModel passwordModel);
+        UserRegModel ResetPassword(ResetPasswordModel password);
+
     }
 }
